@@ -14,17 +14,23 @@ app = Flask(__name__)
 CLIENT_ID = os.environ.get('SPOTIFY_API_KEY')
 CLIENT_SECRET = os.environ.get('SPOTIFY_API_SECRET')
 
-REDIRECT_URI = r'http://localhost:5000/callback'
+REDIRECT_URI = r'https://tunesense-9f13a76c4fd9.herokuapp.com/callback'
 
 SCOPE = 'user-read-private user-read-email'
 AUTH_URL = 'https://accounts.spotify.com/authorize'
 TOKEN_URL = 'https://accounts.spotify.com/api/token'
+
+
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_urlsafe(16))
 
 # Step 1: Generate PKCE code_verifier and code_challenge
 code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(64)).rstrip(b'=').decode('utf-8')
 code_challenge = base64.urlsafe_b64encode(
     hashlib.sha256(code_verifier.encode('utf-8')).digest()
 ).rstrip(b'=').decode('utf-8')
+
+
+
 
 @app.route('/')
 def login():
