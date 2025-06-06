@@ -13,7 +13,8 @@ load_dotenv()
 # Configuration
 CLIENT_ID = os.environ.get('SPOTIFY_API_KEY')
 CLIENT_SECRET = os.environ.get('SPOTIFY_API_SECRET')
-REDIRECT_URI = 'http://127.0.0.1:8888/callback'
+# REDIRECT_URI = 'http://127.0.0.1:8888/callback'
+REDIRECT_URI = 'https://tunesense-9f13a76c4fd9.herokuapp.com/callback'
 SCOPE = 'user-read-private user-read-email'
 
 # PKCE helper
