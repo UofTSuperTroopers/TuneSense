@@ -67,7 +67,7 @@ class LoginWindow(QWidget):
         print(f'params = {params}')
         if 'code' in params:
           code = params['code'][0]
-          token_info = parent.sp_oauth.get_access_token(code)
+          token_info = parent.sp_oauth.get_access_token(code, as_dict=True)
           print(f'[DEBUG]: token_info = {token_info}')
           print(f'[DEBUG]: token_info["expires_at"] = {token_info.get("expires_at")}')
           parent.access_token = token_info['access_token']
@@ -80,6 +80,8 @@ class LoginWindow(QWidget):
           self_2.send_header('Content-type', 'text/html')
           self_2.end_headers()
           self_2.wfile.write(b'<b>Login successful. Close to proceed to TuneSense</b>')
+          threading.Thread(target=server.shutdown).start()
+
         else:
           self_2.send_response(400)
           self_2.end_headers()
