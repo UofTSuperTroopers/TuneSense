@@ -1,4 +1,4 @@
-<h1 align="center"> <img src="Images/pngtree-stunning-music-note-illustration-in-rainbow-colors-png-image_15291817.png" width="45" style="vertical-align: middle; margin-right: 10px;"> TuneSense: Content-Based Music Recommendation System <img src="Images/pngtree-stunning-music-note-illustration-in-rainbow-colors-png-image_15291817.png" width="45" style="vertical-align: middle; margin-right: 10px;">
+<h1 align="center"> <img src="Images/TuneSenseIcon.png" width="45" style="vertical-align: middle; margin-right: 10px;"> TuneSense: Content-Based Music Recommendation System <img src="Images/pngtree-stunning-music-note-illustration-in-rainbow-colors-png-image_15291817.png" width="45" style="vertical-align: middle; margin-right: 10px;">
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python&logoColor=white" /> <!-- Python -->
