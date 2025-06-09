@@ -3,8 +3,8 @@ import pandas as pd
 
 # File paths
 TRACKS_FILE = Path("outputs") / "cleaned_tracks_metadata.csv"
-FEATURES_FILE = Path("outputs") / "flattened_features.csv"
-OUTPUT_FILE = Path("outputs") / "final_merged.csv"
+FEATURES_FILE = Path("outputs") / "flattened_features_with_extras.csv"
+OUTPUT_FILE = Path("outputs") / "final_merged_with_extras.csv"
 
 def pick_column(df, keyword):
     """Pick the first column name containing a keyword."""
@@ -59,6 +59,7 @@ def load_and_merge():
 
 if __name__ == "__main__":
     df = load_and_merge()
+    print(df.columns)
     if df is not None:
         OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(OUTPUT_FILE, index=False)
