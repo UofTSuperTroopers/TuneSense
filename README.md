@@ -43,7 +43,7 @@ TuneSense is a machine learning-based song recommendation engine that suggests s
 
 
 ## 🚀 How to Run *Need to update - only need how to run front end*
-
+testing testing
 
 ---
 ## 🎯 Key Features
@@ -84,7 +84,7 @@ TuneSense is a machine learning-based song recommendation engine that suggests s
 
 * **Dataset**: [FMA (Free Music Archive) — `fma_large`](https://github.com/mdeff/fma)
   * 📦 [Direct `.tar` download (93GB)](https://os.unil.cloud.switch.ch/fma/fma_large.tar.bz2) — *Only recommended if you need full access to raw audio files.*
-* **Size**: ~106,000 total tracks in `fma_large`; ~5,000 used in this project after filtering and cleaning
+* **Size**: ~106,000 total tracks in `fma_large`; ~5,000 tracks used in this project after filtering and cleaning through Librosa.
 * **Features Extracted**:
 
   * MFCC (Mel-frequency cepstral coefficients)
