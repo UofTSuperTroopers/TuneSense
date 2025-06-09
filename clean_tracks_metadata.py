@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 # Define file paths
-DATA_DIR = Path("data/fma small/fma_small_root/fma_metadata")
+DATA_DIR = Path("data/fma_large/fma_large_root/fma_metadata")
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
