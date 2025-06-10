@@ -1,3 +1,4 @@
+
 from PyQt6.QtCore import Qt, QSize, QThreadPool
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
@@ -7,10 +8,13 @@ from PyQt6.QtWidgets import (
 from widgets.searchworker import SearchWorker
 from widgets.thumbnailthread import (
     get_audio_features,
-    get_recommendations,
     fetch_metadata,
     RadarChartCanvas, ThumbnailSignalEmitter, ThumbnailWorker
 )
+from widgets.recommendationworker import RecommendationWorker  # NEW
+import os
+os.environ["PATH"] += os.pathsep + r"C:\ffmpeg\bin"
+
 
 class YouTubeDownloader(QWidget):
     def __init__(self):
@@ -51,6 +55,18 @@ class YouTubeDownloader(QWidget):
         self.thumbnail_emitter.signal.connect(self.set_thumbnail)
         self.videos = []
 
+        self.recommend_list.itemClicked.connect(self.show_recommended_chart)
+    
+    def show_recommended_chart(self, item):
+        song_data = item.data(Qt.ItemDataRole.UserRole)
+        if not song_data:
+            return
+        radar = RadarChartCanvas(song_data, self)
+        self.layout.replaceWidget(self.chart_placeholder, radar)
+        self.chart_placeholder.hide()
+        radar.show()
+
+
     def start_search(self):
         query = self.search_input.text().strip()
         if not query:
@@ -72,7 +88,7 @@ class YouTubeDownloader(QWidget):
             title = video.get('title', 'No title')
             duration = video.get('duration', 0)
             thumbnail_url = video.get('thumbnails', [{}])[0].get('url')
-            track_id = video.get('id')  # use video ID as track_id
+            track_id = video.get('id')
 
             mins, secs = divmod(int(duration or 0), 60)
             label = f"{title} [{mins}:{secs:02d}]"
@@ -100,14 +116,22 @@ class YouTubeDownloader(QWidget):
             QMessageBox.warning(self, "Missing", "No features found for this song.")
             return
 
-        rec_vectors = get_recommendations(features)
-        rec_data = fetch_metadata(rec_vectors)
+        # 🔄 NEW: Use the KNN model
+        self.recommender = RecommendationWorker(features)
+        self.recommender.recommendations_ready.connect(self.display_recommendations)
+        self.recommender.start()
 
-        self.recommend_list.clear()
-        for song in rec_data:
-            self.recommend_list.addItem(QListWidgetItem(song.get('title', song.get('track_id', 'Unknown'))))
-
+        # Show radar chart
         radar = RadarChartCanvas(features, self)
         self.layout.replaceWidget(self.chart_placeholder, radar)
         self.chart_placeholder.hide()
         radar.show()
+
+    def display_recommendations(self, rec_data):
+        self.recommend_list.clear()
+        for song in rec_data:
+            title = song.get("title") or song.get("filename") or str(song.get("track_id"))
+            item = QListWidgetItem(title)
+            item.setData(Qt.ItemDataRole.UserRole, song)
+            self.recommend_list.addItem(item)
+
