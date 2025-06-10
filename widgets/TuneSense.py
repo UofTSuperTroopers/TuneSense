@@ -1,19 +1,22 @@
 import sys
 import os
 import tempfile
+import time
+
 import numpy as np
 import pandas as pd
 import joblib
 import librosa
+from librosa.feature.rhythm import tempo
 import yt_dlp
+
 import matplotlib.pyplot as plt
+
 from PyQt6.QtMultimediaWidgets import QVideoWidget
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QLineEdit, QPushButton, QListWidget,
-    QListWidgetItem, QVBoxLayout, QWidget, QLabel, QHBoxLayout
-)
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QPushButton, QListWidget, QListWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtCore import QUrl, Qt, QThread, pyqtSignal
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from googleapiclient.discovery import build
@@ -61,20 +64,20 @@ class YouTubeDownloader(QThread):
 
     def run(self):
         try:
-            out_path = os.path.join(tempfile.gettempdir(), 'audio.%(ext)s')
+            out_path = os.path.join(tempfile.gettempdir(), f'video_{int(time.time())}.%(ext)s')
             ydl_opts = {
-                'format': 'bestaudio/best',
+                'format': 'bestvideo+bestaudio/best',
+                'merge_output_format': 'mp4',
                 'outtmpl': out_path,
                 'quiet': True,
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                }],
             }
+            print(f"Downloading video from {self.url} to {out_path}")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(self.url, download=True)
-                audio_path = info['requested_downloads'][0]['filepath']
-            self.download_done.emit(audio_path)
+                video_path = ydl.prepare_filename(info)
+                if not video_path.endswith('.mp4'):
+                    video_path = os.path.splitext(video_path)[0] + '.mp4'
+            self.download_done.emit(video_path)
         except Exception as e:
             self.download_done.emit(f"ERROR::{e}")
 
@@ -90,12 +93,21 @@ class FeatureExtractor(QThread):
     def run(self):
         try:
             y, sr = librosa.load(self.audio_path, sr=22050)
+            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)  # 13 MFCCs is typical
+            mfcc_means = np.mean(mfcc, axis=1)
+
             features = {
                 'chroma_stft': np.mean(librosa.feature.chroma_stft(y=y, sr=sr)),
                 'rmse': np.mean(librosa.feature.rms(y=y)),
                 'spectral_centroid': np.mean(librosa.feature.spectral_centroid(y=y, sr=sr)),
-                'tempo': librosa.beat.tempo(y=y, sr=sr)[0]
+                'spectral_bandwidth': np.mean(librosa.feature.spectral_bandwidth(y=y, sr=sr)),
+                'rolloff': np.mean(librosa.feature.spectral_rolloff(y=y, sr=sr)),
+                'zero_crossing_rate': np.mean(librosa.feature.zero_crossing_rate(y=y)),
+                'tempo': tempo(y=y, sr=sr)[0],
             }
+            for i, mfcc_feature in enumerate(mfcc_means, start=1):
+                features[f'mfcc{i}'] = mfcc_feature
+            
             df = pd.DataFrame([features])
             prediction = self.model.predict(df)[0]
             result = {k: v for k, v in zip(['danceability', 'energy', 'valence'], prediction)}
@@ -115,15 +127,25 @@ class RadarChart(QWidget):
 
     def update_plot(self, data):
         self.ax.clear()
+
         labels = list(data.keys())
         values = list(data.values())
+
         values += values[:1]
+
         angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
         angles += angles[:1]
+
         self.ax.plot(angles, values, 'o-', linewidth=2)
         self.ax.fill(angles, values, alpha=0.25)
+        
+        for size, alpha in [(18, 0.1), (15, 0.2), (12, 0.3)]:
+            self.ax.plot(angles, values, 'o', markersize=size, color='#ffd700', alpha=alpha)
+
         self.ax.set_xticks(angles[:-1])
         self.ax.set_xticklabels(labels)
+        self.ax.grid(False)
+        self.ax.spines['polar'].set_visible(False)
         self.canvas.draw()
 
 
@@ -144,13 +166,24 @@ class SongPredictorApp(QMainWindow):
 
         self.radar_chart = RadarChart()
         self.video_widget = QVideoWidget()
-        self.media_player.setVideoOutput(self.video_widget)
 
+        self.media_player = QMediaPlayer()
+        self.audio_output = QAudioOutput()
+
+        self.media_player.mediaStatusChanged.connect(self.handle_media_status)
+
+        self.media_player.setVideoOutput(self.video_widget)
+        self.media_player.setAudioOutput(self.audio_output)
+
+        self.video_widget.setMinimumHeight(400)
+        self.video_widget.setMaximumWidth(600)
         layout = QVBoxLayout()
         top_row = QHBoxLayout()
         top_row.addWidget(self.search_bar)
         top_row.addWidget(self.search_button)
+
         layout.addLayout(top_row)
+
         layout.addWidget(self.results_list)
         layout.addWidget(self.video_widget)
         layout.addWidget(self.radar_chart)
@@ -160,9 +193,13 @@ class SongPredictorApp(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
-        self.media_player = QMediaPlayer()
-        self.audio_output = QAudioOutput()
-        self.media_player.setAudioOutput(self.audio_output)
+    def handle_media_status(self, status):
+        if status == QMediaPlayer.MediaStatus.LoadedMedia:
+            self.media_player.play()
+        elif status == QMediaPlayer.MediaStatus.LoadingMedia:
+            self.media_player.setSource(QUrl())
+        elif status == QMediaPlayer.MediaStatus.InvalidMedia:
+            self.results_list.addItem(QListWidgetItem("❌ Media error occurred."))
 
     def perform_search(self):
         query = self.search_bar.text().strip()
@@ -191,7 +228,7 @@ class SongPredictorApp(QMainWindow):
         url = item.data(Qt.ItemDataRole.UserRole)
         self.results_list.setDisabled(True)
         self.results_list.clear()
-        self.results_list.addItem("⬇️ Downloading audio...")
+        self.results_list.addItem("Downloading...")
 
         self.downloader = YouTubeDownloader(url)
         self.downloader.download_done.connect(self.handle_download_result)
@@ -205,6 +242,8 @@ class SongPredictorApp(QMainWindow):
             self.results_list.addItem(f"❌ Failed to download: {path[7:]}")
             return
 
+        self.media_player.stop()
+        self.media_player.setSource(QUrl())
         self.media_player.setSource(QUrl.fromLocalFile(path))
         self.media_player.play()
 
