@@ -88,7 +88,7 @@ class FeatureExtractor(QThread):
     def __init__(self, audio_path):
         super().__init__()
         self.audio_path = audio_path
-        self.model = joblib.load("multi_audio_model.pkl")  # You need to train and save this model
+        self.model = joblib.load("multi_audio_model.pkl")
 
     def run(self):
         try:
