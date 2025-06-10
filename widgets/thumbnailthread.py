@@ -128,6 +128,7 @@ def get_audio_features(_, title):
 
 def get_recommendations(feature_vector):
     try:
+        print(f'[LOGGER] feature_vector = {feature_vector}')
         vector = [feature_vector[col] for col in features_columns]
         distances, indices = knn_model.kneighbors([vector], n_neighbors=4)
         rec_indices = indices[0][1:]  # skip self
@@ -139,5 +140,6 @@ def get_recommendations(feature_vector):
 
 
 def fetch_metadata(vectors):
+    print('[LOGGER]: vectors = {vectors}')
     track_ids = [int(vec[-1]) if isinstance(vec[-1], (int, float)) else vec[-1] for vec in vectors]
     return list(collection.find({"track_id": {"$in": track_ids}}))

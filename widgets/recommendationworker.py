@@ -13,12 +13,16 @@ class RecommendationWorker(QThread):
     def run(self):
         try:
             # Load model bundle
-            bundle = joblib.load(r"C:\Users\a_lip\OneDrive\Desktop\module-challenges\TuneSense\widgets\tunesense_knn_model_FIXED.joblib")
+            bundle = joblib.load('widgets/tunesense_knn_model_FIXED.joblib')
 
             model = bundle["model"]
             feature_names = bundle["feature_names"]
             metadata = bundle["metadata"]
 
+            t, art_name = metadata['title'], metadata['artist_name']
+            print(f'[LOGGER] t = {t}, art_name = {art_name}')
+
+            
             # Clean the input row
             row = self.input_row.copy()
             for feat in feature_names:
@@ -41,7 +45,7 @@ class RecommendationWorker(QThread):
             # Get neighbors
             distances, indices = model.kneighbors(X_input)
             recommended_rows = metadata.iloc[indices[0]].to_dict("records")
-
+            print(f'[LOGGER]: recommended_rows = {recommended_rows}')
             self.recommendations_ready.emit(recommended_rows)
 
         except Exception as e:
@@ -53,7 +57,7 @@ import joblib
 
 def print_model_metrics():
     # Load model bundle and data
-    bundle = joblib.load(r"C:\Users\a_lip\OneDrive\Desktop\module-challenges\TuneSense\widgets\tunesense_knn_model_FIXED.joblib")
+    bundle = joblib.load(r"widgets/tunesense_knn_model_FIXED.joblib")
     model = bundle["model"]
     feature_names = bundle["feature_names"]
     

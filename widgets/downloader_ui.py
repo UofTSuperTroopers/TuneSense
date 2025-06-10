@@ -1,6 +1,6 @@
 
-from PyQt6.QtCore import Qt, QSize, QThreadPool
-from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtCore import Qt, QSize, QThreadPool, QTimer
+from PyQt6.QtGui import QPixmap, QIcon, QFont
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLineEdit, QPushButton,
     QListWidget, QListWidgetItem, QMessageBox, QLabel
@@ -43,10 +43,12 @@ class YouTubeDownloader(QWidget):
         self.recommend_label = QLabel("🎧 Recommendations:")
         self.layout.addWidget(self.recommend_label)
         self.recommend_list = QListWidget()
+        # self.recommend_list.setMinimumHeight(300)
         self.layout.addWidget(self.recommend_list)
 
         self.chart_placeholder = QLabel("📊 Radar Chart:")
         self.layout.addWidget(self.chart_placeholder)
+        # self.chart_placeholder.setMinimumHeight(300)
 
         self.setLayout(self.layout)
 
@@ -55,7 +57,7 @@ class YouTubeDownloader(QWidget):
         self.thumbnail_emitter.signal.connect(self.set_thumbnail)
         self.videos = []
 
-        self.recommend_list.itemClicked.connect(self.show_recommended_chart)
+        # self.recommend_list.itemClicked.connect(self.show_recommended_chart)
     
     def show_recommended_chart(self, item):
         song_data = item.data(Qt.ItemDataRole.UserRole)
@@ -88,7 +90,6 @@ class YouTubeDownloader(QWidget):
             title = video.get('title', 'No title')
             duration = video.get('duration', 0)
             thumbnail_url = video.get('thumbnails', [{}])[0].get('url')
-            track_id = video.get('id')
 
             mins, secs = divmod(int(duration or 0), 60)
             label = f"{title} [{mins}:{secs:02d}]"
@@ -111,7 +112,7 @@ class YouTubeDownloader(QWidget):
     def show_recommendations_and_chart(self, item):
         title = item.data(Qt.ItemDataRole.UserRole)
         features = get_audio_features(None, title=title)
-
+        print(f'after get_audio_features()')
         if not features:
             QMessageBox.warning(self, "Missing", "No features found for this song.")
             return
@@ -122,16 +123,22 @@ class YouTubeDownloader(QWidget):
         self.recommender.start()
 
         # Show radar chart
-        radar = RadarChartCanvas(features, self)
-        self.layout.replaceWidget(self.chart_placeholder, radar)
-        self.chart_placeholder.hide()
-        radar.show()
+        def update_chart():
+            radar = RadarChartCanvas(features, self)
+            self.layout.replaceWidget(self.chart_placeholder, radar)
+            self.chart_placeholder.hide()
+            radar.show()
+        QTimer.singleShot(0, update_chart)
 
+    
     def display_recommendations(self, rec_data):
         self.recommend_list.clear()
+        print(f'[LOGGER]: rec_data = {rec_data}')
         for song in rec_data:
-            title = song.get("title") or song.get("filename") or str(song.get("track_id"))
-            item = QListWidgetItem(title)
+            title = song.get("title")
+            artist = song.get('artist_name')
+
+            item = QListWidgetItem(f'{title} -- {artist}')
             item.setData(Qt.ItemDataRole.UserRole, song)
             self.recommend_list.addItem(item)
 
