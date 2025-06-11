@@ -1,4 +1,4 @@
-<h1 align="center"> <img src="Images/TuneSenseIcon.png" width="45" style="vertical-align: middle; margin-right: 10px;"> TuneSense: Content-Based Music Recommendation System <img src="Images/pngtree-stunning-music-note-illustration-in-rainbow-colors-png-image_15291817.png" width="45" style="vertical-align: middle; margin-right: 10px;">
+<h1 align="center"> <img src="Images/TuneSenseIcon.png" width="45" style="vertical-align: middle; margin-right: 10px;"> TuneSense: Content-Based Music Recommendation System <img src="Images/TuneSenseIcon.png" width="45" style="vertical-align: middle; margin-right: 10px;">
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python&logoColor=white" /> <!-- Python -->
@@ -37,24 +37,29 @@
 
 ## 📖 Project Overview
 
-TuneSense is a machine learning-based song recommendation engine that suggests similar songs based on audio content. By analyzing features such as timbre, tempo, rhythm, and spectral properties, it offers intelligent content-based recommendations, with support for playlist-aware refinement and genre-based evaluation.
+TuneSense is a machine learning-based song recommendation engine that suggests similar songs based on audio content. By analyzing features such as timbre, tempo, rhythm, and spectral properties, it offers intelligent content-based recommendations using FMA and Librosa, KNN model, MongoDB backend, and a PyQT frontend with YouTube Integration
 
 ---
 
 
-## 🚀 How to Run *Need to update - only need how to run front end*
+### Option 1: Run as script:
+```shell
+# 1. clone repo
+$ git clone https://github.com/UofTSuperTroopers/TuneSense.git 
 
+# 2. run as script
+$ python main.py
+```
+### 
 
 ---
 ## 🎯 Key Features
 
-* 🎧 **Top-K Song Recommendations** (Top-3 and Top-5)
-* 🤖 **Content-Based & Playlist-Aware Modes**
-* 📏 Compare **Cosine vs Euclidean** distance metrics
-* ⚖️ Enable **Weighted KNN** for smarter similarity ranking
-* 📊 Evaluate accuracy with **Genre Match @K**
-* 🌐 **MongoDB Atlas Integration** — remote database access
-* 📈 **Radar Chart Visualization** planned for front-end
+* 🎧 Song search + feature extraction
+* 🔍 Top-3 recommendations using KNN
+* 📊 Radar chart visualization
+* 📺 Embedded YouTube search thumbnails
+* ☁️ MongoDB for data persistence
 
 ---
 
@@ -129,26 +134,6 @@ TuneSense is a machine learning-based song recommendation engine that suggests s
 
 
 
----
-
-## 🖥️ Planned Front-End (Sketch)
-
-```
-+---------------------------------------------------+
-| Welcome to TuneSense, Gwen 🎵                     |
-|--------------------------------------------------|
-| Song Search: [Dropdown / Text Input]             |
-|                                                  |
-| You might also like:                             |
-| - Song Recommendation #1                         |
-| - Song Recommendation #2                         |
-| - Song Recommendation #3                         |
-+--------------------------------------------------+
-
-+----------------------+    
-|       Radar Chart     |   <- audio feature visualization
-+----------------------+    
-```
 
 
 
